@@ -1,111 +1,132 @@
-import React, {useState} from 'react';
-import {StyleSheet, Text, View, FlatList, TouchableOpacity, Image} from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, Button, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { SearchBar } from '@rneui/themed';
-//import {SearchBar} from 'react-native-elements';
 import Constants from 'expo-constants';
+import { Firebase_Auth } from '../Settings/firebase-config';
+import { Firestore_DB } from '../Settings/firebase-config';
+import { setDoc, doc } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 
-const HomeScreen = ({navigation}) => {
-    const [lista, setLista]= useState([]);
-    const [pelicula, setPelicula] = useState("");
-    const [total, setTotal] = useState(0);
-    const [consultado, setConsultado]= useState(false);
-    
-    const buscar = (peli) => {
-        //console.log(peli)
-        setConsultado(true);
-        const apikey ="f9a5ecda";
-        const api_url = `http://www.omdbapi.com/?s=${peli}&apikey=${apikey}`;
-        
-        fetch(api_url)
-          .then(data => {
-            return data.json();
-          })
-          .then(resultado => {
-            //console.log(resultado);
-    
-            const { Search = [] } = resultado;
-    
-            setLista(Search);
-            setTotal(Search.length)
-            //console.log(Search);
-          });
-      };
-     
-    const renderItem =({item})=>(
-        <TouchableOpacity
-            onPress={()=>navigation.navigate('DetailScreen',{movie:item})}
-        >
-            {
-                item.Poster==="N/A"
-                ?
-                <Image
-                    style={styles.images}
-                    source={require('../assets/images/nophoto.png')}
-                />
-                :
-                <Image
-                    style={styles.images}
-                    source={{uri:item.Poster}}
-                />
+const HomeScreen = ({ navigation }) => {
+  const [lista, setLista] = useState([]);
+  const [pelicula, setPelicula] = useState('');
+  const [total, setTotal] = useState(0);
+  const [consultado, setConsultado] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [favoritos, setFavoritos] = useState({});
 
-            }
-        </TouchableOpacity>
-    ) 
+  const buscar = (peli) => {
+    setConsultado(true);
+    setLoading(true);
 
+    const apikey = 'f9a5ecda';
+    const api_url = `http://www.omdbapi.com/?s=${peli}&apikey=${apikey}`;
 
+    fetch(api_url)
+      .then((data) => data.json())
+      .then((resultado) => {
+        const { Search = [] } = resultado;
+
+        setLista(Search);
+        setTotal(Search.length);
+        setLoading(false);
+      });
+  };
+
+  const addToFavorites =  (movie) => {
+    /* setFavoritos({movie});
+    console.log(movie);
+    console.log(favoritos); */
+    //const Data = favoritos.map( p => ({ }))
+    if(movie.imdbID){
+        setDoc(doc(Firestore_DB, "FavMovies/", movie.imdbID), 
+          {Title: movie.Title, 
+          Year: movie.Year, 
+          imdbID: movie.imdbID, 
+          Type: movie.Type, 
+          Poster: movie.Poster
+        })
+    }
+  };
+
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      onPress={() => navigation.navigate('DetailScreen', { movie: item })}
+    >
+      <View>
+        {
+          item.Poster === 'N/A' ?
+            <Image
+              style={styles.images}
+              source={require('../assets/images/nophoto.png')}
+            />
+            :
+            <View>
+              <Image
+                style={styles.images}
+                source={{ uri: item.Poster }}
+              />
+              <TouchableOpacity onPress={() => addToFavorites(item)}>
+                <Text style={styles.addToFav}>Agregar a Favoritos</Text>
+              </TouchableOpacity>
+            </View>
+        }
+      </View>
+    </TouchableOpacity>
+  );
+
+    const handleLogout = async ()=> {
+        await signOut(Firebase_Auth);
+    }
     return (
-    <View style={styles.container}>
-        <Text style={styles.texto}> Buscador de peliculas</Text>
-
-        <SearchBar
-            round
-            containerStyle={{
-                backgroundColor:'transparent',
-                borderTopWidth:0,
-                borderBottomWidth:0,
-            }}
-            inputStyle={{backgroundColor:'white'}}
-            onChangeText={(texto)=>{
-                setPelicula(texto);
-                buscar(texto);
-            }}
-            onClear={()=>{
-                setPelicula("");
-                setConsultado(false);
-                setLista([])
-            }}
-            value={pelicula}
-            placeholder="Escribe aqui..."
-        />
-
-        <View style={{margin:10, fontSize:20}}>
-            {
-                consultado 
-                ?
-                <Text style={styles.texto}>
-                    Hay {total} resultados
-                </Text>
-                :
-                <Text style={styles.texto}>
-                    Realiza una busqueda
-                </Text>
-            }
-
+        <View style={styles.container}>
+    
+          <Text style={styles.texto}> Buscador de películas</Text>
+    
+          <SearchBar
+             round
+             containerStyle={{
+                 backgroundColor:'transparent',
+                 borderTopWidth:0,
+                 borderBottomWidth:0,
+             }}
+             inputStyle={{backgroundColor:'white'}}
+             onChangeText={(texto)=>{
+                 setPelicula(texto);
+                 buscar(texto);
+             }}
+             onClear={()=>{
+                 setPelicula("");
+                 setConsultado(false);
+                 setLista([])
+             }}
+             value={pelicula}
+             placeholder="Escribe aqui..."
+          />
+    
+          <View style={styles.resultados}>
+            {consultado ? (
+              <Text style={styles.texto}>Hay {total} resultados</Text>
+            ) : (
+              <Text style={styles.texto}>Realiza una búsqueda</Text>
+            )}
+          </View>
+    
+          {loading ? (
+            <ActivityIndicator size="large" color="#ffffff" style={styles.indicador} />
+          ) : (
+            <FlatList
+                contentContainerStyle={{alignItems:"center"}}
+                data={lista}
+                numColumns={3}
+                keyExtractor={item=> item.imdbID}
+                renderItem={renderItem}
+            />
+          )}
         </View>
-
-        <FlatList
-            contentContainerStyle={{alignItems:"center"}}
-            data={lista}
-            numColumns={3}
-            keyExtractor={item=> item.imdbID}
-            renderItem={renderItem}
-        
-        />
-
-
-
-    </View>);
-}
+      );
+    };
+    
  
 export default HomeScreen;
 
@@ -127,6 +148,22 @@ const styles = StyleSheet.create({
       fontSize: 20,
       margin: 10,
       fontWeight: 'bold',
-    }
+    },
+    button: {
+        backgroundColor: '#f57c00',
+        height: 58,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 40,
+      },
+
+      resultados: {
+        margin: 10,
+        fontSize: 20,
+      },
+      indicador: {
+        marginTop: 20,
+      },
 });
   
