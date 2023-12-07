@@ -26,7 +26,6 @@ const HomeScreen = ({ navigation }) => {
       .then((data) => data.json())
       .then((resultado) => {
         const { Search = [] } = resultado;
-
         setLista(Search);
         setTotal(Search.length);
         setLoading(false);
@@ -38,8 +37,11 @@ const HomeScreen = ({ navigation }) => {
     console.log(movie);
     console.log(favoritos); */
     //const Data = favoritos.map( p => ({ }))
+    const auth = Firebase_Auth;
+    const user = auth.currentUser;
+    console.log(user);
     if(movie.imdbID){
-        setDoc(doc(Firestore_DB, "FavMovies/", movie.imdbID), 
+        setDoc(doc(Firestore_DB, "FavMovies_" + user.uid + "/", movie.imdbID), 
           {Title: movie.Title, 
           Year: movie.Year, 
           imdbID: movie.imdbID, 
@@ -52,6 +54,7 @@ const HomeScreen = ({ navigation }) => {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       onPress={() => navigation.navigate('DetailScreen', { movie: item })}
+      style={styles.itemContainer}
     >
       <View>
         {
@@ -66,8 +69,8 @@ const HomeScreen = ({ navigation }) => {
                 style={styles.images}
                 source={{ uri: item.Poster }}
               />
-              <TouchableOpacity onPress={() => addToFavorites(item)}>
-                <Text style={styles.addToFav}>Agregar a Favoritos</Text>
+              <TouchableOpacity onPress={() => addToFavorites(item)} style={styles.addToFavButton}>
+                <Text style={styles.addToFavText}>Agregar a favoritos</Text>
               </TouchableOpacity>
             </View>
         }
@@ -75,9 +78,9 @@ const HomeScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
-    const handleLogout = async ()=> {
+    /* const handleLogout = async ()=> {
         await signOut(Firebase_Auth);
-    }
+    } */
     return (
         <View style={styles.container}>
     
@@ -135,7 +138,7 @@ const styles = StyleSheet.create({
       flex: 1,
       marginTop: Constants.statusBarHeight,
       justifyContent: 'flex-start',
-      backgroundColor: '#151414',
+      backgroundColor: '#22092C',
     },
     images:{
       width: 100, 
@@ -150,20 +153,35 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
     },
     button: {
-        backgroundColor: '#f57c00',
-        height: 58,
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 40,
+      backgroundColor: '#f57c00',
+      height: 58,
+      borderRadius: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 40,
+    },
+    Text: { 
+      color: 'white',
+      fontSize: 20,
+    },
+    resultados: {
+      margin: 10,
+      fontSize: 20,
+    },
+    indicador: {
+      marginTop: 20,
+    },
+      addToFavButton: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        padding: 5,
+        borderTopLeftRadius: 10,
       },
-
-      resultados: {
-        margin: 10,
-        fontSize: 20,
-      },
-      indicador: {
-        marginTop: 20,
+      addToFavText: {
+        color: 'white',
+        fontSize: 12,
       },
 });
   

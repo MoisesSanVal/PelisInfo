@@ -40,7 +40,7 @@ const LoginScreen = ({ navigation }) => {
     <KeyboardAvoidingView style={styles.container} behavior="padding">
         <View style={styles.overlay} />
         <View style={styles.form}>
-          <Image source={require('../assets/images/logo.png')} style={styles.logo} />
+          <Image source={require('../assets/images/popcorn.png')} style={styles.logo} />
           <TextInput
             value={email}
             style={styles.input}
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: '#22092C',
   },
   form: {
     alignItems: 'center',
@@ -93,7 +93,13 @@ const styles = StyleSheet.create({
   logo: {
     width: 150,
     height: 150,
-    marginBottom: 30,
+    resizeMode: 'contain',
+    paddingTop: 50,
+    marginTop: 50,
+    marginBottom: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    
   },
   input: {
     backgroundColor: "rgba(255, 255, 255, 0.8)",
@@ -105,7 +111,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   button: {
-    backgroundColor: '#f57c00',
+    backgroundColor: '#F05941',
     width: '80%',
     height: 50,
     borderRadius: 10,
